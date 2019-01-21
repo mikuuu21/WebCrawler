@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WebCrawler.DbModels;
 
 namespace WebCrowler.DbModels
 {
@@ -15,5 +16,13 @@ namespace WebCrowler.DbModels
         public string link { get; set; }
         public DateTime createDate { get; set; }
         public DateTime? checkDate { get; set; }
+
+        public static IList<string> GetPagesUrl(DateTime date)
+        {
+            using (APPContext context = new APPContext())
+            {
+                return context.GoogleResult.Where(x => x.checkDate == null).Select(x => x.link).ToList(); 
+            }
+        }
     }
 }
