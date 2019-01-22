@@ -73,6 +73,7 @@
     <Compile Include="DbModels\APPContext.cs" />
     <Compile Include="DbModels\GoogleResults.cs" />
     <Compile Include="DbModels\Ingredients.cs" />
+    <Compile Include="DbModels\IngredientsBasis.cs" />
     <Compile Include="DbModels\Keys.cs" />
     <Compile Include="DbModels\Restaurants.cs" />
     <Compile Include="Migrations\Configuration.cs" />

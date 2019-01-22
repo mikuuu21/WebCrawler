@@ -24,9 +24,9 @@ namespace WebCrawler
         static void Main(string[] args)
         {
             //https://stackoverflow.com/questions/26958829/how-do-i-use-the-new-httpclient-from-windows-web-http-to-download-an-image pobranie obrazka za pomoc¹ HttpClient
-            StartWebCrawling();
+            //StartWebCrawling();
 
-
+            GetIngredientsTwo();
             //string url = "";
             //WebClient web = new WebClient();
             //string site = web.DownloadString(url);
@@ -41,6 +41,55 @@ namespace WebCrawler
             Console.ReadLine();
 
         }
+
+
+        private static async void GetIngredientsOne()
+        {
+            string url = "https://gotujmy.pl/skladniki-kulinarne.html";
+            var httpClient = new HttpClient();
+
+            var html = await httpClient.GetStringAsync(url);
+
+            string result = html.ToString();
+
+
+            var htmlDocument = new HtmlDocument();
+            htmlDocument.LoadHtml(html);
+
+            var nodes = htmlDocument.DocumentNode.SelectNodes("//div//a[normalize-space(text())]");
+            for (int i = 41; i < nodes.Count() - 13 ; i++)
+            {
+
+                Console.WriteLine(nodes[i].InnerHtml);
+            }
+        }
+
+
+        private static async void GetIngredientsTwo()
+        {
+            string url = "https://www.dorotakaminska.pl/indeks-skladnikow/";
+            var httpClient = new HttpClient();
+
+            var html = await httpClient.GetStringAsync(url);
+
+            string result = html.ToString();
+
+
+            var htmlDocument = new HtmlDocument();
+            htmlDocument.LoadHtml(html);
+
+            var nodes = htmlDocument.DocumentNode.SelectNodes("//p//a[normalize-space(text())]");
+            for (int i = 2; i < nodes.Count() -4; i++)
+            {
+                if (nodes[i].InnerHtml.Contains("<img"))
+                {
+                    continue;
+                }
+                Console.WriteLine(nodes[i].InnerHtml);
+            }
+        }
+
+
 
         private static async void StartWebCrawling()
         {
@@ -84,8 +133,6 @@ namespace WebCrawler
                 var fullHtmlNodes = htmlDocument.DocumentNode.SelectNodes("//span[normalize-space(text())] | //h[normalize-space(text())] | //em[normalize-space(text())] | //p[normalize-space(text())] | //img");
 
                 var imgNode = htmlDocument.DocumentNode.SelectNodes(".//img");
-
-                GetImages(httpClient);
 
                 foreach (var item in imgNode)
                 {

@@ -20,6 +20,7 @@ namespace WebCrawler.DbModels
         public DbSet<Ingredients> Ingredient { get; set; }
         public DbSet<Keys> Key { get; set; }
         public DbSet<GoogleResults>  GoogleResult { get; set; }
+        public DbSet<IngredientsBasis> IngredientsBasis { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
