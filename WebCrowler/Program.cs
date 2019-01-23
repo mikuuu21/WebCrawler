@@ -24,132 +24,17 @@ namespace WebCrawler
         static void Main(string[] args)
         {
             //https://stackoverflow.com/questions/26958829/how-do-i-use-the-new-httpclient-from-windows-web-http-to-download-an-image pobranie obrazka za pomocπ HttpClient
-            //StartWebCrawling();
 
-            GetIngredientsTwo();
-            //string url = "";
-            //WebClient web = new WebClient();
-            //string site = web.DownloadString(url);
+            Crawler webCrawler = new Crawler();
+            webCrawler.StartWebCrawling();
 
-            //GoogleSearch search = new GoogleSearch();
-            //Console.WriteLine("Wprowadü zapytanie");
-            //string query = Console.ReadLine();
-            //if (!string.IsNullOrWhiteSpace(query))
-            //{
-            //    search.SearchForSites(query);
-            //}
+            //IngredientsStore.GetBasicIngredients();
+
             Console.ReadLine();
 
         }
 
-
-        private static async void GetIngredientsOne()
-        {
-            string url = "https://gotujmy.pl/skladniki-kulinarne.html";
-            var httpClient = new HttpClient();
-
-            var html = await httpClient.GetStringAsync(url);
-
-            string result = html.ToString();
-
-
-            var htmlDocument = new HtmlDocument();
-            htmlDocument.LoadHtml(html);
-
-            var nodes = htmlDocument.DocumentNode.SelectNodes("//div//a[normalize-space(text())]");
-            for (int i = 41; i < nodes.Count() - 13 ; i++)
-            {
-
-                Console.WriteLine(nodes[i].InnerHtml);
-            }
-        }
-
-
-        private static async void GetIngredientsTwo()
-        {
-            string url = "https://www.dorotakaminska.pl/indeks-skladnikow/";
-            var httpClient = new HttpClient();
-
-            var html = await httpClient.GetStringAsync(url);
-
-            string result = html.ToString();
-
-
-            var htmlDocument = new HtmlDocument();
-            htmlDocument.LoadHtml(html);
-
-            var nodes = htmlDocument.DocumentNode.SelectNodes("//p//a[normalize-space(text())]");
-            for (int i = 2; i < nodes.Count() -4; i++)
-            {
-                if (nodes[i].InnerHtml.Contains("<img"))
-                {
-                    continue;
-                }
-                Console.WriteLine(nodes[i].InnerHtml);
-            }
-        }
-
-
-
-        private static async void StartWebCrawling()
-        {
-            string url = "http://www.momu.pl/menu.html";
-            string menuLink = null;
-            var httpClient = new HttpClient();
-
-            var html = await httpClient.GetStringAsync(url);
-
-            string result = html.ToString();
-
-
-            var htmlDocument = new HtmlDocument();
-            htmlDocument.LoadHtml(html);
-            var nodes = htmlDocument.DocumentNode.SelectNodes(".//a[normalize-space(text())] | .//a//span[normalize-space(text())] | .//a//p[normalize-space(text())]").
-                 Where(x => (String.Compare(x.InnerHtml, "menu", StringComparison.OrdinalIgnoreCase) == 0) && x.Attributes.Contains("href")).ToList();
-
-            if (nodes != null && nodes.Any(x => x.Attributes["href"].Value.Contains("https") || x.Attributes["href"].Value.Contains("http")))
-            {
-                // var link = nodes.Where(x => x.Attributes["href"].Value.ToUpper().Contains("menu".ToUpper()));
-                foreach (var node in nodes)
-                {
-
-                    menuLink = node.Attributes["href"].Value;
-
-
-                    var menuHtml = await httpClient.GetStringAsync(menuLink);
-
-                    htmlDocument.LoadHtml(menuHtml);
-                    var ingredientsNodes = htmlDocument.DocumentNode.SelectNodes("//span[normalize-space(text())] | //h[normalize-space(text())] | //em[normalize-space(text())] | //p[normalize-space(text())]");
-
-                    foreach (var ingNode in ingredientsNodes)
-                    {
-                        Console.WriteLine(ingNode.InnerHtml);
-                    }
-
-                }
-            }
-            else
-            {
-                var fullHtmlNodes = htmlDocument.DocumentNode.SelectNodes("//span[normalize-space(text())] | //h[normalize-space(text())] | //em[normalize-space(text())] | //p[normalize-space(text())] | //img");
-
-                var imgNode = htmlDocument.DocumentNode.SelectNodes(".//img");
-
-                foreach (var item in imgNode)
-                {
-                    var src = item.Attributes["src"].Value;
-                }
-
-                foreach (var ingNode in fullHtmlNodes)
-                {
-                    Console.WriteLine(ingNode.InnerHtml);
-                }
-            }
-
-
-
-
-        }
-
+       
         private static async void GetImages( HttpClient client)
         {
 

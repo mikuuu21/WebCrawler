@@ -17,11 +17,19 @@ namespace WebCrowler.DbModels
         public DateTime createDate { get; set; }
         public DateTime? checkDate { get; set; }
 
-        public static IList<string> GetPagesUrl(DateTime date)
+        public static List<string> GetPagesUrl(DateTime date)
         {
             using (APPContext context = new APPContext())
             {
                 return context.GoogleResult.Where(x => x.checkDate == null).Select(x => x.link).ToList(); 
+            }
+        }
+
+        public static List<GoogleResults> GetResults(DateTime date)
+        {
+            using (APPContext context = new APPContext())
+            {
+                return context.GoogleResult.Where(x => x.checkDate == null).ToList();
             }
         }
     }
