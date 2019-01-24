@@ -28,8 +28,6 @@ namespace WebCrawler
             Crawler webCrawler = new Crawler();
             webCrawler.StartWebCrawling();
 
-            //IngredientsStore.GetBasicIngredients();
-
             Console.ReadLine();
 
         }

@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="Classes\Crawler.cs" />
     <Compile Include="Classes\IngredientsStore.cs" />
+    <Compile Include="DbModels\Nodes.cs" />
     <Compile Include="Google\GoogleSearch.cs" />
     <Compile Include="DbModels\APPContext.cs" />
     <Compile Include="DbModels\GoogleResults.cs" />
