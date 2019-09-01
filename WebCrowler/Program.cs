@@ -15,7 +15,7 @@ using WebCrowler.Classes;
 using HtmlAgilityPack;
 using System.IO;
 using System.Drawing;
-
+using System.Globalization;
 
 namespace WebCrawler
 {
@@ -23,6 +23,8 @@ namespace WebCrawler
     {
         static void Main(string[] args)
         {
+            if (Debugger.IsAttached)
+                CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("en-US");
             //https://stackoverflow.com/questions/26958829/how-do-i-use-the-new-httpclient-from-windows-web-http-to-download-an-image pobranie obrazka za pomoc¹ HttpClient
 
             Crawler webCrawler = new Crawler();

@@ -1,6 +1,7 @@
 ﻿using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -37,41 +38,61 @@ namespace WebCrowler.Classes
                 using (APPContext context = new APPContext())
                 {
                     List<Ingredients> ingredients = new List<Ingredients>();
-                    List<Nodes> dBNodes = new List<Nodes>();
+
                     
                     string restaurantName = null;
 
                     foreach (var googleResult in CGoogleResults)
                     {
-
+                        List<Nodes> dBNodes = new List<Nodes>();
                         Restaurants restaurant = new Restaurants() { City = "Warszawa" };
 
-                        string url = "https://www.street.com.pl/"; //googleResult.link;
+                        string url = googleResult.link; //googleResult.link;
 
                         restaurantName = Regex.Match(url, restauranNamePattern).ToString().Trim('.');
                         restaurant.RestaurantName = restaurantName;
 
                         string menuLink = null;
 
-                        var html = await httpClient.GetStringAsync(url);
+                        var html = "";
+                        var menuHtml = "";
+                        try
+                        {
+                             html = await httpClient.GetStringAsync(url);
+                        }
+                        catch (Exception)
+                        {
+                            continue;
+                        }
+
 
                         string result = html.ToString();
 
                         var htmlDocument = new HtmlDocument();
 
                         htmlDocument.LoadHtml(html);
-                        var nodes = htmlDocument.DocumentNode.SelectNodes(".//a[normalize-space(text())] | .//a//span[normalize-space(text())] | .//a//p[normalize-space(text())]").
-                             Where(x => (String.Compare(x.InnerHtml, "menu", StringComparison.OrdinalIgnoreCase) == 0) && x.Attributes.Contains("href")).GroupBy(x => x.Attributes).FirstOrDefault().ToList();
 
-                        if (nodes != null && nodes.Any(x => x.Attributes["href"].Value.Contains("https") || x.Attributes["href"].Value.Contains("http")))
+                        var nodes = htmlDocument.DocumentNode.SelectNodes(".//a[normalize-space(text())] | .//a//span[normalize-space(text())] | .//a//p[normalize-space(text())]").
+                             Where(x => (String.Compare(x.InnerHtml, "menu", StringComparison.OrdinalIgnoreCase) == 0) && x.Attributes.Contains("href")).GroupBy(x => x.Attributes["href"].Value)?.ToList();
+
+
+                        if (nodes != null && nodes.Any(x => x.Key.Contains("https") || x.Key.Contains("http")))
                         {
                             foreach (var node in nodes)
                             {
 
-                                menuLink = node.Attributes["href"].Value;
+                                menuLink = node.Key;
 
+                                try
+                                {
+                                    menuHtml = await httpClient.GetStringAsync(menuLink);
+                                }
+                                catch (Exception)
+                                {
 
-                                var menuHtml = await httpClient.GetStringAsync(menuLink);
+                                    continue;
+                                }
+                                
 
                                 htmlDocument.LoadHtml(menuHtml);
 
@@ -93,6 +114,10 @@ namespace WebCrowler.Classes
                         context.SaveChanges();
 
                         var matchedIngredients = Nodes.RunStoredProcedure(ConditionsQuery);
+                        //foreach (var item in matchedIngredients)
+                        //{
+                        //    Console.WriteLine(item.node);
+                        //}
 
                         context.Database.ExecuteSqlCommand("TRUNCATE TABLE [Nodes]");
                         //context.Database.ExecuteSqlCommand("TRUNCATE TABLE [Ingredients]");
@@ -100,15 +125,26 @@ namespace WebCrowler.Classes
                         //context.Database.ExecuteSqlCommand("TRUNCATE TABLE [RestaurantsIngredients]");
 
 
-                        restaurant.Ingredients = Ingredients.ConvertToIngredientsList(matchedIngredients);
+                        ingredients = Ingredients.ConvertToIngredientsList(matchedIngredients);
 
-                        context.Restaurant.Add(restaurant);
+                            //restaurant.Ingredients = new List<Ingredients>();
+
+                            //foreach (var item in ingredients)
+                            //{
+                            //    restaurant.Ingredients.Add(item);
+                            //}
+
+                           restaurant.Ingredients = ingredients;
+
+                            context.Restaurant.Add(restaurant);
                         context.SaveChanges();
+
 
 
 
                     }
 
+                    Console.WriteLine("koniec");
 
 
                 }
@@ -118,10 +154,6 @@ namespace WebCrowler.Classes
 
                 throw;
             }
-
-
-
-
 
 
         }
@@ -134,43 +166,47 @@ namespace WebCrowler.Classes
             var matchAddressRegex = true;
             string postalCode = null;
             string address = null;
-
-            foreach (var ingNode in fullHtmlNodes)
+            if (fullHtmlNodes != null)
             {
 
 
-
-                var cleanWords = Regex.Replace(ingNode.InnerHtml, @"\t|\n|\r", "");
-                var splittedWords = Regex.Split(ingNode.InnerText, ",");
-                var words = splittedWords
-                    .Where(x => !x.Contains("&nbsp;") && !string.IsNullOrEmpty(x.Trim()))
-                         .ToList();
-
-                foreach (var item in words)
+                foreach (var ingNode in fullHtmlNodes)
                 {
-                    if (matchAddressRegex == true)
+
+
+
+                    var cleanWords = Regex.Replace(ingNode.InnerHtml, @"\t|\n|\r", "");
+                    var splittedWords = Regex.Split(ingNode.InnerText, ",");
+                    var words = splittedWords
+                        .Where(x => !x.Contains("&nbsp;") && !string.IsNullOrEmpty(x.Trim()))
+                             .ToList();
+
+                    foreach (var item in words)
                     {
-                        address = Regex.Match(item, @"(ul\.)([A-z a-z])+\s(\d)*").ToString();
-                        if (!string.IsNullOrWhiteSpace(address))
+                        if (matchAddressRegex == true)
                         {
-                            restaurant.Address = address;
-                            matchAddressRegex = false;
+                            address = Regex.Match(item, @"(ul\.)([A-z a-z])+\s(\d)*").ToString();
+                            if (!string.IsNullOrWhiteSpace(address))
+                            {
+                                restaurant.Address = address;
+                                matchAddressRegex = false;
+                            }
+
                         }
-                        
-                    }
-                    if (matchPostalCodeRegex == true)
-                    {
-                        postalCode = Regex.Match(item, "[0-9]{2}-[0-9]{3}").ToString();
-                        if (!string.IsNullOrWhiteSpace(postalCode))
+                        if (matchPostalCodeRegex == true)
                         {
-                            restaurant.PostalCode = postalCode;
-                            matchPostalCodeRegex = false;
+                            postalCode = Regex.Match(item, "[0-9]{2}-[0-9]{3}").ToString();
+                            if (!string.IsNullOrWhiteSpace(postalCode))
+                            {
+                                restaurant.PostalCode = postalCode;
+                                matchPostalCodeRegex = false;
+                            }
                         }
+                        Nodes dBNode = new Nodes();
+                        dBNode.node = item;
+                        dBNodes.Add(dBNode);
+                        Console.WriteLine(item);
                     }
-                    Nodes dBNode = new Nodes();
-                    dBNode.node = item;
-                    dBNodes.Add(dBNode);
-                    Console.WriteLine(item);
                 }
             }
 

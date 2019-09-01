@@ -10,10 +10,10 @@ namespace WebCrawler.DbModels
 {
     class Ingredients
     {
-        public Ingredients()
-        {
-            this.Restaurants = new HashSet<Restaurants>();
-        }
+        //public Ingredients()
+        //{
+        //    this.Restaurants = new HashSet<Restaurants>();
+        //}
 
         [Key]
         public int IngredientId { get; set; }
